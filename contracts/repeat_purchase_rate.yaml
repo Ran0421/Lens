@@ -1,0 +1,34 @@
+kpi: repeat_purchase_rate
+display_name: "Repeat Purchase Rate"
+definition: >
+  share of active customers with >1 order in trailing 90 days, per region,
+  computed from the weekly customer-master snapshot joined to daily
+  transactions
+source:
+  primary_table: customer_master.snapshot
+  joined_table: transactions.sales
+  columns: [snapshot_week, customer_id, region, tenure_months, contract_type, order_history]
+grain: weekly
+refresh_cadence: weekly
+materiality_threshold:
+  statistical: "actual falls outside seasonal_baseline_mean +/- 2*std (12-week trailing window)"
+  business: "absolute change > 3pp week-over-week for the slice"
+  std_multiplier: 2.0
+  window_periods: 12
+  business_abs_threshold: 0.03
+  business_pct_threshold: null
+  combine_rule: "OR"
+  value_column: "repeat_purchase_rate"
+owner: "Customer Success"
+lineage: >
+  customer_master.raw_snapshot (weekly) -> joined to transactions.raw_sales
+  (daily, downsampled to week-ending) -> kpi_repeat_purchase_rate
+access:
+  regional_manager: "row-filtered to own region only"
+  finance_vp: "all regions, aggregated only (no customer_id exposed)"
+notes: >
+  This is the KPI that forces honest grain reconciliation: it is only ever
+  as fresh as the weekly customer_master snapshot, even though transactions
+  refresh daily. The Reconcile stage must tag this KPI's freshness
+  separately from the four daily KPIs above rather than silently treating
+  it as equally current.

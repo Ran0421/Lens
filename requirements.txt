@@ -1,0 +1,10 @@
+pandas
+numpy
+duckdb
+kagglehub
+groq
+fastapi
+uvicorn
+pyyaml
+python-dotenv
+jupyter

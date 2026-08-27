@@ -1,0 +1,26 @@
+kpi: discount_rate
+display_name: "Discount Rate"
+definition: "avg(discount), weighted by sales, per region/segment/day"
+source:
+  table: transactions.sales
+  columns: [order_date, region, segment, sales, discount]
+grain: daily
+refresh_cadence: daily
+materiality_threshold:
+  statistical: "actual falls outside seasonal_baseline_mean +/- 1.5*std (8-week trailing window)"
+  business: "absolute change > 3pp for the slice"
+  std_multiplier: 1.5
+  window_periods: 8
+  business_abs_threshold: 0.03
+  business_pct_threshold: null
+  combine_rule: "OR"
+  value_column: "discount_rate"
+owner: "Pricing"
+lineage: "transactions.raw_sales -> sales_weighted_avg_by_region_segment -> kpi_discount_rate"
+access:
+  regional_manager: "row-filtered to own region only"
+  finance_vp: "all regions"
+notes: >
+  A pricing-lever KPI -- movements here are frequently the *cause* of a
+  Revenue or Gross Margin anomaly rather than a separate anomaly in its own
+  right. Decompose stage checks Discount Rate as a candidate driver first.
