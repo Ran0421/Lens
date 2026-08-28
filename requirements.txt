@@ -8,3 +8,4 @@ uvicorn
 pyyaml
 python-dotenv
 jupyter
+tabulate
