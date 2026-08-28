@@ -3,13 +3,13 @@ Lens API + frontend host, in one FastAPI process.
 
 Designed to run as-is on Replit: one process serves the API under /api/*
 and the static frontend at /. This means the whole prototype is reachable
-from a single public Replit URL -- useful for the demo video and for
+from a single public Replit URL useful for the demo video and for
 anyone reviewing the GitHub repo without needing to run two servers.
 
 Endpoints below are stubbed with realistic shapes so the frontend can be
 built and demoed against them now; each stub is replaced with the real
 Detect/Decompose/Explain/Recommend pipeline as those modules land (see
-README status checklist). Stubs are clearly marked -- nothing here
+README status checklist). Stubs are clearly marked nothing here
 pretends to be more finished than it is.
 """
 
