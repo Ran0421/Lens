@@ -23,7 +23,7 @@ from pydantic import BaseModel
 app = FastAPI(title="Lens API")
 
 # ---------------------------------------------------------------------------
-# Minimal RBAC stub -- real version reads from a permissions table (governance.py)
+# Minimal RBAC stub - real version reads from a permissions table (governance.py)
 # ---------------------------------------------------------------------------
 PERSONA_ACCESS = {
     "regional_manager_west": {"role": "regional_manager", "region": "West"},
@@ -40,7 +40,7 @@ def get_persona(x_persona_id: str = Header(default="finance_vp")):
 
 
 # ---------------------------------------------------------------------------
-# /api/dashboard -- summary KPI tiles
+# /api/dashboard - summary KPI tiles
 # ---------------------------------------------------------------------------
 @app.get("/api/dashboard")
 def dashboard(persona=None):
@@ -57,7 +57,7 @@ def dashboard(persona=None):
 
 
 # ---------------------------------------------------------------------------
-# /api/investigate -- runs Detect(already flagged) -> Decompose -> Explain -> Recommend
+# /api/investigate - runs Detect(already flagged) -> Decompose -> Explain -> Recommend
 # ---------------------------------------------------------------------------
 class InvestigateRequest(BaseModel):
     kpi: str
@@ -107,7 +107,7 @@ def investigate(req: InvestigateRequest, persona=None):
 
 
 # ---------------------------------------------------------------------------
-# /api/feedback -- capture + (lightweight) closed loop
+# /api/feedback - capture + (lightweight) closed loop
 # ---------------------------------------------------------------------------
 class FeedbackRequest(BaseModel):
     investigation_id: str
