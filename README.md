@@ -38,7 +38,7 @@ key (no public dataset does, for this exact combination). Source B is mapped
 onto Source A's Region dimension via a fixed seeded random assignment; ticket
 data is used for realistic structure/format, with scenario-specific synthetic
 tickets overlaid for the 4 required demo scenarios. This is disclosed here
-and in `src/acquire_data.py` docstrings — the brief explicitly does not
+and in `src/acquire_data.py` docstrings - the brief explicitly does not
 expect real proprietary joined data.
 
 ## Setup
