@@ -6,10 +6,10 @@ query with plain SQL, plus a freshness tag on every row.
 Primary key note: customer_id here is always a REAL Superstore customer_id.
 customer_master and support_tickets are constructed in acquire_data.py
 against that real key (see that file's module docstring for the full
-rationale) -- so every join below is a genuine primary-key relationship,
+rationale) - so every join below is a genuine primary-key relationship,
 not a coincidental one between unrelated companies' data.
 
-Non-LLM stage. Pure data engineering -- this is deliberate: reconciliation
+Non-LLM stage. Pure data engineering - this is deliberate: reconciliation
 is exactly the kind of step that should NOT be delegated to an LLM, since
 correctness here is what everything downstream depends on.
 """
