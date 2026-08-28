@@ -3,7 +3,7 @@ Acquire and construct the three data sources for Lens Round 2.
 
 IMPORTANT DESIGN NOTE (read before modifying):
 Superstore, Telco Churn, and the Customer Support Ticket dataset are three
-UNRELATED real companies -- they do not share customers, and joining them
+UNRELATED real companies - they do not share customers, and joining them
 directly on customer_id would be a fabricated relationship, not a real one.
 
 Instead: Superstore is the single source of truth for identity (its
@@ -21,7 +21,7 @@ using Telco and the ticket dataset only as calibration/style donors:
     language is authentic), only the attribution is reassigned.
 
 This means every SQL join in reconcile.py is a real primary-key
-relationship on customer_id, not a coincidental one -- while every number
+relationship on customer_id, not a coincidental one - while every number
 and sentence in the derived tables still traces back to real data.
 """
 
@@ -82,7 +82,7 @@ def build_customer_master(transactions: pd.DataFrame, telco_raw: pd.DataFrame,
     """
     For every real Superstore customer_id, construct a weekly snapshot row.
     tenure_months, contract_type, and churn_flag are drawn from Telco's
-    empirical distribution via sampling-with-replacement -- this preserves
+    empirical distribution via sampling-with-replacement - this preserves
     realistic shape (e.g. Telco's actual tenure skew, actual churn rate)
     without claiming any individual Telco customer IS a Superstore customer.
     """
@@ -125,7 +125,7 @@ def build_support_tickets(transactions: pd.DataFrame, tickets_raw: pd.DataFrame,
     Sample real ticket text (and category, if present) from the ticket
     dataset, then attach each sampled ticket to a real Superstore
     customer_id and a real order_date drawn from that customer's own order
-    history -- so tickets land inside a plausible window relative to actual
+    history - so tickets land inside a plausible window relative to actual
     purchase activity, rather than at an arbitrary unrelated date.
     """
     rng = np.random.default_rng(seed=seed)
@@ -167,7 +167,7 @@ def build_support_tickets(transactions: pd.DataFrame, tickets_raw: pd.DataFrame,
 def synthesize_scenario_tickets(scenario_evidence: list[dict]) -> pd.DataFrame:
     """
     Overlay a handful of scenario-specific synthetic tickets on top of the
-    constructed ticket corpus above -- used only to make the 4 required
+    constructed ticket corpus above - used only to make the 4 required
     demo scenarios concretely walkable (e.g. tickets that mention pricing
     in the exact week/region a Detect-stage anomaly fires). Clearly
     disclosed as fully synthetic, unlike build_support_tickets() above
