@@ -9,3 +9,5 @@ pyyaml
 python-dotenv
 jupyter
 tabulate
+groq
+python-dotenv
