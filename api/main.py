@@ -3,13 +3,13 @@ Lens API + frontend host, in one FastAPI process.
 
 Designed to run as-is on Replit: one process serves the API under /api/*
 and the static frontend at /. This means the whole prototype is reachable
-from a single public Replit URL -- useful for the demo video and for
+from a single public Replit URL useful for the demo video and for
 anyone reviewing the GitHub repo without needing to run two servers.
 
 Endpoints below are stubbed with realistic shapes so the frontend can be
 built and demoed against them now; each stub is replaced with the real
 Detect/Decompose/Explain/Recommend pipeline as those modules land (see
-README status checklist). Stubs are clearly marked -- nothing here
+README status checklist). Stubs are clearly marked nothing here
 pretends to be more finished than it is.
 """
 
@@ -23,7 +23,7 @@ from pydantic import BaseModel
 app = FastAPI(title="Lens API")
 
 # ---------------------------------------------------------------------------
-# Minimal RBAC stub -- real version reads from a permissions table (governance.py)
+# Minimal RBAC stub - real version reads from a permissions table (governance.py)
 # ---------------------------------------------------------------------------
 PERSONA_ACCESS = {
     "regional_manager_west": {"role": "regional_manager", "region": "West"},
@@ -40,7 +40,7 @@ def get_persona(x_persona_id: str = Header(default="finance_vp")):
 
 
 # ---------------------------------------------------------------------------
-# /api/dashboard -- summary KPI tiles
+# /api/dashboard - summary KPI tiles
 # ---------------------------------------------------------------------------
 @app.get("/api/dashboard")
 def dashboard(persona=None):
@@ -57,7 +57,7 @@ def dashboard(persona=None):
 
 
 # ---------------------------------------------------------------------------
-# /api/investigate -- runs Detect(already flagged) -> Decompose -> Explain -> Recommend
+# /api/investigate - runs Detect(already flagged) -> Decompose -> Explain -> Recommend
 # ---------------------------------------------------------------------------
 class InvestigateRequest(BaseModel):
     kpi: str
@@ -107,7 +107,7 @@ def investigate(req: InvestigateRequest, persona=None):
 
 
 # ---------------------------------------------------------------------------
-# /api/feedback -- capture + (lightweight) closed loop
+# /api/feedback - capture + (lightweight) closed loop
 # ---------------------------------------------------------------------------
 class FeedbackRequest(BaseModel):
     investigation_id: str

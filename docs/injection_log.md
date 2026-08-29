@@ -1,4 +1,4 @@
-# Injection Log — Lens Round 2
+# Injection Log - Lens Round 2
 
 This file documents the ONLY synthetic modification made to the real
 Superstore dataset used in this prototype. All other 9,991 rows are

@@ -1,4 +1,4 @@
-# Lens — Round 2 (BusinessIntelligence.ai)
+# Lens - Round 2 (BusinessIntelligence.ai)
 
 A KPI intelligence-to-action engine. See `docs/architecture.md` (coming next)
 for the full 8-requirement mapping and the LLM vs. non-LLM breakdown.
@@ -6,11 +6,11 @@ for the full 8-requirement mapping and the LLM vs. non-LLM breakdown.
 ## Status
 
 **Built:**
-- [x] 5 KPI semantic contracts (`contracts/*.yaml`) — definitions, thresholds, lineage, access rules
-- [x] Data acquisition layer (`src/acquire_data.py`) — 3 sources, real primary-key integrity (see docstrings)
-- [x] Reconcile layer (`src/reconcile.py`) — DuckDB warehouse, grain alignment, freshness tagging
-- [x] Sample data (`data/sample/`) — with a guaranteed, verified anomaly scenario
-- [x] Detect stage (`src/detect.py`) — seasonal baseline + statistical/business materiality (OR combine rule, documented tradeoff). Tested against sample data: correctly flags the known East/Corporate anomaly. See `docs/detect_threshold_tuning.md` for why sample-scale testing uses a scoped threshold override (contracts themselves are untouched).
+- [x] 5 KPI semantic contracts (`contracts/*.yaml`) - definitions, thresholds, lineage, access rules
+- [x] Data acquisition layer (`src/acquire_data.py`) - 3 sources, real primary-key integrity (see docstrings)
+- [x] Reconcile layer (`src/reconcile.py`) - DuckDB warehouse, grain alignment, freshness tagging
+- [x] Sample data (`data/sample/`) - with a guaranteed, verified anomaly scenario
+- [x] Detect stage (`src/detect.py`) - seasonal baseline + statistical/business materiality (OR combine rule, documented tradeoff). Tested against sample data: correctly flags the known East/Corporate anomaly. See `docs/detect_threshold_tuning.md` for why sample-scale testing uses a scoped threshold override (contracts themselves are untouched).
 - [x] Replit-ready API stub (`api/main.py`) + frontend (`frontend/index.html`)
 
 **Not yet built:**
@@ -38,7 +38,7 @@ key (no public dataset does, for this exact combination). Source B is mapped
 onto Source A's Region dimension via a fixed seeded random assignment; ticket
 data is used for realistic structure/format, with scenario-specific synthetic
 tickets overlaid for the 4 required demo scenarios. This is disclosed here
-and in `src/acquire_data.py` docstrings — the brief explicitly does not
+and in `src/acquire_data.py` docstrings - the brief explicitly does not
 expect real proprietary joined data.
 
 ## Setup
