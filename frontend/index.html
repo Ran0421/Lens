@@ -324,7 +324,7 @@ function renderInsights(data){
       <div class="stage-sub">${data.cache_hit ? "Served from cache — no new cost incurred" : "Freshly computed"}</div>
       <div class="cause-box ${isAbstention ? 'abstain' : ''}">
         <span class="conf-pill ${data.confidence}">${data.confidence.replace(/_/g," ")}</span>
-        <div style="margin-top:8px">${data.narrative}</div>
+        <div class="cause-narrative" style="margin-top:8px">${data.narrative}</div>
       </div>
     </div>`;
 
@@ -357,9 +357,10 @@ function renderInsights(data){
         <div class="rec-item"><span class="rec-label">Expected impact</span><span>${data.expected_impact}</span></div>
         <div class="rec-item"><span class="rec-label">Monitoring</span><span>${data.monitoring_plan}</span></div>
         <div class="feedback-row">
-          <button class="fb-btn confirm" onclick="sendFeedback('${data.kpi}','${data.region}','${data.segment}','${data.week}','confirmed')">Confirm cause</button>
-          <button class="fb-btn reject" onclick="sendFeedback('${data.kpi}','${data.region}','${data.segment}','${data.week}','rejected')">Reject cause</button>
+          <button class="fb-btn confirm" onclick="sendFeedback('${data.kpi}','${data.region}','${data.segment}','${data.week}','${data.driver}',this,'confirmed')">Confirm cause</button>
+          <button class="fb-btn reject" onclick="sendFeedback('${data.kpi}','${data.region}','${data.segment}','${data.week}','${data.driver}',this,'rejected')">Reject cause</button>
         </div>
+        <div class="fb-confirm-msg" style="display:none;font-size:12.5px;color:var(--focus);margin-top:8px;">Feedback recorded — thank you.</div>
       </div>`;
   } else {
     html += `<div class="stage-card"><div class="gap-box"><strong>No action recommended.</strong><br/>${data.action}</div></div>`;
@@ -408,13 +409,17 @@ async function loadHistory(){
   }
 }
 
-async function sendFeedback(kpi, region, segment, week, verdict){
+async function sendFeedback(kpi, region, segment, week, causeType, btnEl, verdict){
+  const causeText = document.querySelector(".cause-narrative")?.textContent || causeType;
   try{
     await fetch("/api/feedback", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({kpi, region, segment, week, verdict})
+      body: JSON.stringify({kpi, region, segment, week, cause_type: causeType, cause_text: causeText, verdict})
     });
+    const row = btnEl.closest(".feedback-row");
+    row.nextElementSibling.style.display = "block";
+    row.querySelectorAll("button").forEach(b => b.disabled = true);
   } catch(err){ /* non-blocking */ }
 }
 

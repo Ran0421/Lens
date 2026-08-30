@@ -49,6 +49,7 @@ from pydantic import BaseModel
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 import governance
+import feedback
 from explain import explain_flagged_anomaly, explain_sparse_history
 from recommend import recommend_for_flagged_scenario, recommend_for_sparse_history_scenario
 from personas import generate_persona_narrative, PERSONAS
@@ -352,7 +353,7 @@ def investigate(req: InvestigateRequest, x_persona_id: str = Header(default="fin
 
 
 # ---------------------------------------------------------------------------
-# /api/feedback -- STILL A STUB. feedback.py does not exist yet.
+# /api/feedback -- wired to the real feedback.py closed loop
 # ---------------------------------------------------------------------------
 
 class FeedbackRequest(BaseModel):
@@ -360,17 +361,20 @@ class FeedbackRequest(BaseModel):
     region: str
     segment: str
     week: str
+    cause_type: str
+    cause_text: str
     verdict: str  # "confirmed" | "rejected" | "edited"
     note: str | None = None
 
 
-FEEDBACK_STORE = []  # TODO: replace with src.feedback persistent store once that module exists
-
-
 @app.post("/api/feedback")
 def submit_feedback(req: FeedbackRequest):
-    FEEDBACK_STORE.append(req.dict())
-    return {"status": "recorded", "total_feedback_entries": len(FEEDBACK_STORE)}
+    entry = feedback.record_feedback(
+        req.kpi, req.region, req.segment, req.week,
+        req.cause_type, req.cause_text, req.verdict, req.note,
+    )
+    reliability = feedback.get_reliability_score(req.kpi, req.cause_type)
+    return {"status": "recorded", "entry": entry, "updated_reliability": reliability}
 
 
 # ---------------------------------------------------------------------------
