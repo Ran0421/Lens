@@ -89,13 +89,6 @@
       <div class="placeholder">Loading dashboard…</div>
     </div>
 
-    <div class="stage-card">
-      <div class="stage-title">Investigate an anomaly</div>
-      <div class="stage-sub">Choose a scenario, then run the pipeline live</div>
-      <div class="scenario-row" id="scenarioRow"></div>
-      <button class="ask-btn" id="investigateBtn" onclick="runInvestigation()">Ask Lens why →</button>
-    </div>
-
     <div id="results"></div>
     <div id="telemetryBox"></div>
   </div>
@@ -107,13 +100,9 @@ const PERSONAS = [
   {id: "regional_manager_east", label: "Regional Mgr — East"},
   {id: "finance_vp", label: "Finance VP"},
 ];
-const SCENARIOS = [
-  {id: "clear", label: "Clear signal"},
-  {id: "ambiguous", label: "Ambiguous signal"},
-];
 
 let currentPersona = "finance_vp";
-let currentScenario = "clear";
+let currentAnomalies = [];
 
 function renderPersonaRow(){
   const row = document.getElementById("personaRow");
@@ -122,7 +111,7 @@ function renderPersonaRow(){
     const btn = document.createElement("button");
     btn.className = "persona-btn" + (p.id === currentPersona ? " active" : "");
     btn.textContent = p.label;
-    btn.onclick = () => { currentPersona = p.id; renderPersonaRow(); loadDashboard(); };
+    btn.onclick = () => { currentPersona = p.id; renderPersonaRow(); loadDashboard(); document.getElementById("results").innerHTML = ""; document.getElementById("telemetryBox").innerHTML = ""; };
     row.appendChild(btn);
   });
   const note = document.getElementById("rbacNote");
@@ -134,101 +123,105 @@ function renderPersonaRow(){
   }
 }
 
-function renderScenarioRow(){
-  const row = document.getElementById("scenarioRow");
-  row.innerHTML = "";
-  SCENARIOS.forEach(s => {
-    const btn = document.createElement("button");
-    btn.className = "scenario-btn" + (s.id === currentScenario ? " active" : "");
-    btn.textContent = s.label;
-    btn.onclick = () => { currentScenario = s.id; renderScenarioRow(); };
-    row.appendChild(btn);
-  });
-}
-
 async function loadDashboard(){
   const grid = document.getElementById("kpiGrid");
   grid.innerHTML = `<div class="placeholder">Loading dashboard…</div>`;
   try{
     const res = await fetch("/api/dashboard", {headers: {"X-Persona-Id": currentPersona}});
     const data = await res.json();
+    currentAnomalies = data.kpis;
     grid.innerHTML = "";
-    data.kpis.forEach(k => {
+    if(data.kpis.length === 0){
+      grid.innerHTML = `<div class="placeholder">No flagged anomalies visible for this persona's allowed regions.</div>`;
+      return;
+    }
+    data.kpis.forEach((k, i) => {
       const isUp = k.delta_pct >= 0;
       const card = document.createElement("div");
-      card.className = "card" + (k.anomaly ? " anomaly" : "");
+      card.className = "card anomaly";
       card.innerHTML = `
-        ${k.anomaly ? '<div class="badge">Anomaly</div>' : ''}
-        <div class="kpi-label">${k.kpi.replace(/_/g," ")}</div>
-        <div class="kpi-value">${typeof k.value === "number" && k.value > 1000 ? "$"+(k.value/1000).toFixed(0)+"K" : k.value}</div>
+        <div class="badge">Anomaly</div>
+        <div class="kpi-label">${k.kpi.replace(/_/g," ")} — ${k.region}/${k.segment}</div>
+        <div class="kpi-value">${typeof k.value === "number" && Math.abs(k.value) > 1000 ? "$"+(k.value/1000).toFixed(1)+"K" : "$"+k.value}</div>
         <div class="kpi-delta ${isUp?'up':'down'}">${isUp?'↗':'↘'} ${Math.abs(k.delta_pct)}%</div>
-        ${k.freshness_note ? `<div class="freshness">${k.freshness_note}</div>` : ''}
+        <div class="freshness">week of ${k.week}</div>
+        <button class="ask-btn" onclick="investigate(${i})">Ask Lens why →</button>
       `;
       grid.appendChild(card);
     });
+    const freshness = document.createElement("div");
+    freshness.className = "freshness";
+    freshness.style.gridColumn = "1 / -1";
+    freshness.textContent = data.freshness_note + ` (as of ${data.as_of})`;
+    grid.appendChild(freshness);
   } catch(err){
     grid.innerHTML = `<div class="placeholder">Could not reach the API. Is the backend running?</div>`;
   }
 }
 
-async function runInvestigation(){
-  const btn = document.getElementById("investigateBtn");
+async function investigate(index){
+  const anomaly = currentAnomalies[index];
   const results = document.getElementById("results");
   const telemetryBox = document.getElementById("telemetryBox");
-  btn.disabled = true;
-  results.innerHTML = `<div class="placeholder">Running Localize → Explain → Recommend…</div>`;
+  results.innerHTML = `<div class="stage-card"><div class="placeholder">Running Explain → Recommend → Personas… (this makes real LLM calls and can take a few seconds)</div></div>`;
   telemetryBox.innerHTML = "";
 
   try{
     const res = await fetch("/api/investigate", {
       method: "POST",
       headers: {"Content-Type": "application/json", "X-Persona-Id": currentPersona},
-      body: JSON.stringify({kpi: "revenue_northeast", scenario: currentScenario})
+      body: JSON.stringify({kpi: anomaly.kpi, region: anomaly.region, segment: anomaly.segment, week: anomaly.week})
     });
+
+    if(res.status === 500){
+      results.innerHTML = `<div class="stage-card"><div class="gap-box"><strong>Temporary error (likely a Groq rate limit).</strong><br/>The pipeline hit a rate limit or transient API error. Wait a few seconds and click "Ask Lens why" again — this does NOT mean the app is broken.</div></div>`;
+      return;
+    }
+    if(!res.ok){
+      let detail = "Unknown error";
+      try{ const err = await res.json(); detail = err.detail || JSON.stringify(err); } catch(e){}
+      results.innerHTML = `<div class="stage-card"><div class="gap-box"><strong>${res.status}</strong><br/>${detail}</div></div>`;
+      return;
+    }
     const data = await res.json();
     renderResults(data);
   } catch(err){
-    results.innerHTML = `<div class="placeholder">Investigation failed — check the API is running.</div>`;
-  } finally {
-    btn.disabled = false;
+    results.innerHTML = `<div class="stage-card"><div class="gap-box"><strong>Could not reach the API.</strong><br/>Check the backend terminal is still running. (${err.message})</div></div>`;
   }
 }
 
 function renderResults(data){
   const results = document.getElementById("results");
   const telemetryBox = document.getElementById("telemetryBox");
+  const isAbstention = data.confidence === "low_confidence_abstain" || data.confidence === "insufficient_history";
 
   let html = `
     <div class="stage-card">
-      <div class="stage-title">Localize</div>
-      <div class="stage-sub">${data.localize.summary}</div>
-    </div>
-    <div class="stage-card">
-      <div class="stage-title">Explain</div>`;
+      <div class="stage-title">Explain — ${data.persona_view} view</div>
+      <div class="stage-sub">${data.kpi} · ${data.region}/${data.segment} · week of ${data.week} ${data.cache_hit ? "· <em>cached result</em>" : ""}</div>
+      <div class="cause-box ${isAbstention ? '' : 'high'}">
+        <span class="conf-pill">${data.confidence}</span>
+        <div>${data.narrative}</div>
+      </div>
+    </div>`;
 
-  data.causes.forEach((c, i) => {
+  if(!isAbstention){
     html += `
-      <div class="cause-box high">
-        <span class="conf-pill">${c.confidence} confidence</span>
-        <div>${c.name}</div>
+      <div class="stage-card">
+        <div class="stage-title">Recommend</div>
+        <div class="rec-item"><span>Driver</span><span>${data.driver}</span></div>
+        <div class="rec-item"><span>Lever</span><span>${data.lever}</span></div>
+        <div class="rec-item"><span>Owner</span><span>${data.owner}</span></div>
+        <div class="rec-item"><span>Action</span><span>${data.action}</span></div>
+        <div class="rec-item"><span>Expected impact</span><span>${data.expected_impact}</span></div>
+        <div class="rec-item"><span>Monitoring plan</span><span>${data.monitoring_plan}</span></div>
         <div class="feedback-row">
-          <button class="fb-btn confirm" onclick="sendFeedback('${c.name.replace(/'/g,"")}','confirmed')">Confirm</button>
-          <button class="fb-btn reject" onclick="sendFeedback('${c.name.replace(/'/g,"")}','rejected')">Reject</button>
+          <button class="fb-btn confirm" onclick="sendFeedback('${data.kpi}','${data.region}','${data.segment}','${data.week}','confirmed')">Confirm cause</button>
+          <button class="fb-btn reject" onclick="sendFeedback('${data.kpi}','${data.region}','${data.segment}','${data.week}','rejected')">Reject cause</button>
         </div>
       </div>`;
-  });
-
-  if(data.confidence_level === "low"){
-    html += `<div class="gap-box"><strong>Confidence too low to recommend action.</strong><br/>${data.data_gap}</div>`;
-  }
-  html += `</div>`;
-
-  if(data.recommendations && data.recommendations.length){
-    html += `<div class="stage-card"><div class="stage-title">Recommend</div>`;
-    data.recommendations.forEach((r, i) => {
-      html += `<div class="rec-item"><span>0${i+1}</span><span>${r}</span></div>`;
-    });
-    html += `</div>`;
+  } else {
+    html += `<div class="stage-card"><div class="gap-box"><strong>No action recommended.</strong><br/>${data.action}</div></div>`;
   }
 
   results.innerHTML = html;
@@ -236,26 +229,25 @@ function renderResults(data){
   const t = data.telemetry;
   telemetryBox.innerHTML = `
     <div class="telemetry">
-      <span>latency: ${t.latency_ms}ms</span>
-      <span>llm calls: ${t.llm_calls}</span>
-      <span>tokens: ${t.tokens_estimated}</span>
-      <span>est. cost: $${t.cost_estimated_usd}</span>
-      <span>stages: ${Object.entries(t.stages).map(([k,v])=>`${k}=${v}`).join(", ")}</span>
+      <span>latency: ${(t.total_latency_seconds*1000).toFixed(0)}ms</span>
+      <span>llm calls: ${t.model_calls}</span>
+      <span>tokens: ${t.total_tokens}</span>
+      <span>est. cost: $${t.total_estimated_cost_usd}</span>
+      ${data.cache_hit ? '<span><strong>served from cache — no new cost incurred</strong></span>' : ''}
     </div>`;
 }
 
-async function sendFeedback(causeName, verdict){
+async function sendFeedback(kpi, region, segment, week, verdict){
   try{
     await fetch("/api/feedback", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({investigation_id: "demo", cause_name: causeName, verdict: verdict})
+      body: JSON.stringify({kpi, region, segment, week, verdict})
     });
   } catch(err){ /* non-blocking */ }
 }
 
 renderPersonaRow();
-renderScenarioRow();
 loadDashboard();
 </script>
 </body>

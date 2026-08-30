@@ -200,7 +200,7 @@ def build_sparse_history_packet(kpi: str, region: str, segment: str, week: str) 
 # LLM calls (Groq) with telemetry
 # ---------------------------------------------------------------------------
 
-def call_groq(messages: list, response_format_json: bool = True) -> tuple:
+def call_groq(messages: list, response_format_json: bool = True, _retry_count: int = 0) -> tuple:
     """Makes one Groq chat completion call. Returns (content, telemetry_dict).
     telemetry_dict always has latency_seconds, prompt_tokens,
     completion_tokens, estimated_cost_usd, model -- even on failure (with
@@ -209,7 +209,18 @@ def call_groq(messages: list, response_format_json: bool = True) -> tuple:
     Falls back to a plain call (no response_format constraint) if the
     model/account doesn't support structured JSON mode -- some models on
     Groq's current lineup may not support it the same way older models did.
+
+    Retries automatically on a 429 rate-limit error, up to MAX_RETRIES times.
+    Groq's error message includes exactly how long to wait (e.g. "Please
+    try again in 1.38s") -- this is parsed and respected rather than
+    guessing a fixed backoff. This matters in practice: a live API endpoint
+    hit by real interactive clicks (not just a batch script) can easily
+    exceed a free-tier TPM limit within a normal testing session, and
+    failing outright on the first 429 makes the app look broken rather
+    than just momentarily rate-limited.
     """
+    MAX_RETRIES = 3
+
     if Groq is None:
         raise RuntimeError("groq package not installed. Run: pip install groq")
 
@@ -220,15 +231,24 @@ def call_groq(messages: list, response_format_json: bool = True) -> tuple:
 
     start = time.time()
     try:
-        response = client.chat.completions.create(**kwargs)
-    except Exception as e:
-        if response_format_json and "response_format" in str(e).lower():
-            # This model/account doesn't support structured JSON mode --
-            # retry without it, relying on the prompt's own JSON instruction.
-            kwargs.pop("response_format", None)
+        try:
             response = client.chat.completions.create(**kwargs)
-        else:
-            raise
+        except Exception as e:
+            if response_format_json and "response_format" in str(e).lower():
+                kwargs.pop("response_format", None)
+                response = client.chat.completions.create(**kwargs)
+            else:
+                raise
+    except Exception as e:
+        is_rate_limit = "429" in str(e) or "rate_limit" in str(e).lower()
+        if is_rate_limit and _retry_count < MAX_RETRIES:
+            wait_seconds = 2.0  # sensible default if we can't parse Groq's suggested wait
+            match = re.search(r"try again in ([\d.]+)s", str(e))
+            if match:
+                wait_seconds = float(match.group(1)) + 0.5  # small buffer past what Groq asked for
+            time.sleep(wait_seconds)
+            return call_groq(messages, response_format_json, _retry_count=_retry_count + 1)
+        raise
     latency = time.time() - start
 
     usage = response.usage
