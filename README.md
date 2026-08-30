@@ -67,7 +67,7 @@ Support Tickets (real)        ─┘         │            │            │  
 | Governance | RBAC access gate, checked *before* any evidence is built; append-only audit log | Non-LLM |
 | LLM eval | Citation groundedness, confidence divergence, PII leak scan, numeric consistency, driver alignment | Non-LLM (reads existing outputs, no new API calls) |
 
-**The LLM is never the source of quantitative truth.** Every number an LLM narrative states is traceable to a field computed upstream by deterministic code — the eval suite (`src/llm_eval.py`) checks this automatically and has already caught one real distortion bug (see Known Issues Found and Fixed, below).
+**The LLM is never the source of quantitative truth.** Every number an LLM narrative states is traceable to a field computed upstream by deterministic code the eval suite (`src/llm_eval.py`) checks this automatically and has already caught one real distortion bug (see Known Issues Found and Fixed, below).
 
 ---
 
@@ -76,7 +76,7 @@ Support Tickets (real)        ─┘         │            │            │  
 - **Transactions**: real Kaggle Superstore dataset (9,994 rows, 793 customers, 2014–2017).
 - **Customer master**: every row's `customer_id` is a real Superstore customer. Attributes (tenure, contract type, churn flag) are sampled from the real Telco Churn dataset's *distribution* not copied from Telco's own (unrelated) customers.
 - **Support tickets**: real ticket text from the real Customer Support Ticket dataset, remapped to real Superstore customers and real order windows. The dataset's `{product_purchased}` template placeholder (present in 100% of source rows) is filled with each ticket's actual matched product.
-- **The one injection**: 3 real rows (East/Corporate, week of 2017-12-11) have `sales`/`profit` scaled by 1.4x to complete a multi-factor demo scenario. Full before/after values are in `docs/injection_log.md`. Everything else — all 9,991 other rows, every other week, every other region/segment — is completely untouched real data.
+- **The one injection**: 3 real rows (East/Corporate, week of 2017-12-11) have `sales`/`profit` scaled by 1.4x to complete a multi-factor demo scenario. Full before/after values are in `docs/injection_log.md`. Everything else: all 9,991 other rows, every other week, every other region/segment is completely untouched real data.
 
 ---
 
@@ -128,15 +128,6 @@ Lens/
 │   └── injection_log.md              # exact rows/values changed by the one documented injection
 └── requirements.txt
 ```
-
----
-
-## What's not yet built
-
-- **`feedback.py`** - the lightweight closed-loop design (analyst confirms/rejects a cause, few-shot retrieval on similar future cases, per-cause-type reliability scoring) is designed but not implemented. `/api/feedback` is currently an in-memory stub.
-- **Business Proposal PDF/PPT** the written deliverable is separate from this technical prototype.
-- **Test fixtures** - the 4 demo scenarios are runnable via the scripts above but aren't yet packaged as `pytest` fixtures under `tests/scenarios/`.
-
 ---
 
 ## Setup notes
