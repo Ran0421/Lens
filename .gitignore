@@ -8,3 +8,5 @@ data/processed/
 *.egg-info/
 venv/
 .env
+data/processed/investigate_cache.json
+data/processed/audit_log.jsonl

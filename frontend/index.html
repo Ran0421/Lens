@@ -3,94 +3,186 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lens — KPI storytelling</title>
+<title>Lens — KPI intelligence-to-action engine</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --navy:#101a2b; --navy-2:#16233a;
-    --teal:#0f766e; --teal-light:#e6f5f3;
-    --danger:#c0392b; --danger-light:#fdecea;
-    --amber:#b8860b; --amber-light:#fdf3e0;
-    --text:#1c2430; --muted:#6b7280; --border:#e5e7eb; --bg:#f7f8fa;
+    --ink:#0b1220; --ink-2:#141d31;
+    --paper:#f6f5f2; --paper-2:#ffffff;
+    --focus:#0ea89a; --focus-dim:#0ea89a22;
+    --signal:#e35d4f; --signal-dim:#e35d4f18;
+    --amber:#d9a441; --amber-dim:#d9a44118;
+    --slate:#5b6472; --slate-2:#8b93a1;
+    --border:#e4e1da; --border-dark:#232d45;
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);}
+  ::selection{background:var(--focus-dim);}
+  body{margin:0;font-family:'Inter',sans-serif;background:var(--paper);color:var(--ink);}
   .app{display:flex;min-height:100vh;}
-  .sidebar{width:220px;background:var(--navy);color:#fff;padding:24px 16px;flex-shrink:0;}
-  .brand{display:flex;align-items:center;gap:10px;margin-bottom:32px;}
-  .brand-dot{width:32px;height:32px;border-radius:8px;background:var(--teal);display:flex;align-items:center;justify-content:center;font-weight:700;}
-  .brand-name{font-weight:600;font-size:16px;}
-  .brand-sub{font-size:11px;color:#9aa5b8;}
-  .nav-item{padding:10px 12px;border-radius:8px;font-size:14px;color:#c7cedb;margin-bottom:4px;cursor:default;}
-  .nav-item.active{background:rgba(255,255,255,0.08);color:#fff;}
-  .main{flex:1;padding:32px 40px;max-width:1100px;}
-  h1{font-size:26px;font-weight:700;margin:0 0 4px;}
-  .subtitle{color:var(--muted);font-size:14px;margin-bottom:24px;}
-  .persona-row{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;}
-  .persona-btn{border:1px solid var(--border);background:#fff;padding:8px 14px;border-radius:20px;font-size:13px;cursor:pointer;color:var(--muted);}
-  .persona-btn.active{border-color:var(--teal);color:var(--teal);background:var(--teal-light);font-weight:600;}
-  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;}
-  .card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px;}
-  .card.anomaly{border-color:var(--danger);background:linear-gradient(180deg,#fff,var(--danger-light));position:relative;}
-  .badge{position:absolute;top:-10px;right:16px;background:var(--danger);color:#fff;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;}
-  .kpi-label{font-size:13px;color:var(--muted);margin-bottom:6px;}
-  .kpi-value{font-size:26px;font-weight:700;font-family:'IBM Plex Mono',monospace;}
-  .kpi-delta{font-size:13px;margin-top:4px;}
-  .up{color:#1a7f4a;} .down{color:var(--danger);}
-  .freshness{font-size:11px;color:var(--muted);margin-top:8px;font-style:italic;}
-  .ask-btn{margin-top:14px;background:var(--teal);color:#fff;border:none;padding:9px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;}
-  .ask-btn:hover{filter:brightness(1.08);}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{width:232px;background:var(--ink);color:#fff;padding:28px 18px;flex-shrink:0;
+    display:flex;flex-direction:column;}
+  .brand{display:flex;align-items:center;gap:11px;margin-bottom:36px;}
+  .brand-mark{width:34px;height:34px;border-radius:50%;border:2px solid var(--focus);
+    display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;}
+  .brand-mark::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--focus);}
+  .brand-name{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;letter-spacing:-0.02em;}
+  .brand-sub{font-size:10.5px;color:var(--slate-2);letter-spacing:0.06em;text-transform:uppercase;margin-top:1px;}
+  .nav-item{padding:11px 13px;border-radius:9px;font-size:14px;color:#aab3c5;margin-bottom:3px;
+    cursor:pointer;transition:background 0.15s, color 0.15s;font-weight:500;}
+  .nav-item:hover{background:rgba(255,255,255,0.05);color:#fff;}
+  .nav-item.active{background:var(--focus-dim);color:var(--focus);}
+  .nav-spacer{flex:1;}
+  .sidebar-foot{font-size:11px;color:var(--slate-2);line-height:1.5;padding-top:16px;
+    border-top:1px solid var(--border-dark);}
+
+  /* ---------- Main ---------- */
+  .main{flex:1;padding:36px 44px;max-width:1180px;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:29px;font-weight:700;margin:0 0 5px;letter-spacing:-0.02em;}
+  .subtitle{color:var(--slate);font-size:14px;margin-bottom:26px;}
+
+  .persona-row{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+  .persona-btn{border:1px solid var(--border);background:var(--paper-2);padding:8px 15px;
+    border-radius:20px;font-size:13px;cursor:pointer;color:var(--slate);font-weight:500;transition:all 0.15s;}
+  .persona-btn:hover{border-color:var(--focus);}
+  .persona-btn.active{border-color:var(--focus);color:var(--focus);background:var(--focus-dim);font-weight:600;}
+  .rbac-note{font-size:12.5px;color:var(--slate);background:var(--focus-dim);border-radius:9px;
+    padding:9px 14px;margin-bottom:26px;border-left:3px solid var(--focus);}
+
+  /* ---------- Featured signal (hero) ---------- */
+  .featured{background:var(--paper-2);border:1px solid var(--border);border-radius:16px;
+    padding:28px 30px;margin-bottom:24px;position:relative;overflow:hidden;}
+  .featured-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--slate-2);
+    letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;}
+  .featured-headline{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:600;
+    margin:0 0 10px;letter-spacing:-0.01em;}
+  .featured-body{display:flex;align-items:flex-end;gap:32px;flex-wrap:wrap;}
+  .featured-value{font-family:'IBM Plex Mono',monospace;font-size:44px;font-weight:600;
+    color:var(--signal);line-height:1;}
+  .featured-value.up{color:var(--focus);}
+  .featured-meta{font-size:13px;color:var(--slate);margin-top:8px;}
+  .conf-pill{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:4px 12px;border-radius:20px;
+    text-transform:uppercase;letter-spacing:0.04em;font-weight:600;}
+  .conf-pill.high{background:var(--focus-dim);color:var(--focus);}
+  .conf-pill.medium{background:var(--amber-dim);color:var(--amber);}
+  .conf-pill.low_confidence_abstain, .conf-pill.insufficient_history{background:var(--signal-dim);color:var(--signal);}
+
+  /* Signature "focusing" reveal -- radial blur to sharp, once, on load */
+  @keyframes lens-focus{ 0%{ filter: blur(6px); opacity:0.4; } 100%{ filter: blur(0); opacity:1; } }
+  .lens-focus-in{ animation: lens-focus 0.7s cubic-bezier(0.2,0.7,0.3,1) both; }
+  @media (prefers-reduced-motion: reduce){ .lens-focus-in{ animation:none; } }
+
+  /* ---------- Grid / cards ---------- */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px;}
+  .card{background:var(--paper-2);border:1px solid var(--border);border-radius:13px;padding:18px 20px;
+    transition:border-color 0.15s;}
+  .card:hover{border-color:var(--focus);}
+  .card.anomaly{border-left:3px solid var(--signal);}
+  .kpi-label{font-size:12.5px;color:var(--slate);margin-bottom:6px;}
+  .kpi-value{font-size:23px;font-weight:600;font-family:'IBM Plex Mono',monospace;}
+  .kpi-delta{font-size:13px;margin-top:4px;font-family:'IBM Plex Mono',monospace;}
+  .up{color:var(--focus);} .down{color:var(--signal);}
+  .freshness{font-size:11.5px;color:var(--slate-2);margin-top:8px;font-style:italic;grid-column:1/-1;}
+  .ask-btn{margin-top:13px;background:var(--ink);color:#fff;border:none;padding:9px 15px;
+    border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:background 0.15s;}
+  .ask-btn:hover{background:var(--focus);}
   .ask-btn:disabled{opacity:0.5;cursor:not-allowed;}
 
-  .scenario-row{display:flex;gap:8px;margin-bottom:20px;}
-  .scenario-btn{border:1px solid var(--border);background:#fff;padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;}
-  .scenario-btn.active{border-color:var(--amber);background:var(--amber-light);font-weight:600;}
+  /* ---------- Stage / driver cards ---------- */
+  .stage-card{background:var(--paper-2);border:1px solid var(--border);border-radius:13px;
+    padding:20px 22px;margin-bottom:14px;}
+  .stage-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15.5px;margin-bottom:4px;}
+  .stage-sub{font-size:12.5px;color:var(--slate);margin-bottom:14px;}
+  .cause-box{border-radius:11px;padding:15px 17px;margin-bottom:10px;background:var(--focus-dim);}
+  .cause-box.abstain{background:var(--signal-dim);}
+  .gap-box{border:1px dashed var(--signal);background:var(--signal-dim);border-radius:11px;
+    padding:14px 17px;font-size:13.5px;color:#8a3226;}
 
-  .stage-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;}
-  .stage-title{font-weight:600;font-size:15px;margin-bottom:4px;}
-  .stage-sub{font-size:13px;color:var(--muted);margin-bottom:14px;}
-  .cause-box{border-radius:10px;padding:14px 16px;margin-bottom:10px;}
-  .cause-box.high{background:#eafaf3;border:1px solid #b7ebd3;}
-  .conf-pill{font-size:11px;font-family:'IBM Plex Mono',monospace;padding:2px 10px;border-radius:20px;background:#d1f5e5;color:#0a7a4b;float:right;}
-  .gap-box{border:1px dashed var(--danger);background:var(--danger-light);border-radius:10px;padding:14px 16px;font-size:13.5px;color:#7a2e24;}
-  .rec-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;}
+  .driver-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;
+    padding:13px 0;border-bottom:1px solid var(--border);}
+  .driver-row:last-child{border-bottom:none;}
+  .driver-name{font-weight:600;font-size:14px;}
+  .driver-type{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;
+    letter-spacing:0.04em;padding:2px 8px;border-radius:20px;margin-left:8px;}
+  .driver-type.direct{background:var(--focus-dim);color:var(--focus);}
+  .driver-type.correlational{background:var(--amber-dim);color:var(--amber);}
+  .driver-type.context{background:#e4e1da;color:var(--slate);}
+  .driver-note{font-size:12.5px;color:var(--slate);margin-top:3px;max-width:480px;}
+  .driver-value{font-family:'IBM Plex Mono',monospace;font-size:14.5px;font-weight:600;white-space:nowrap;}
+
+  .rec-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;}
   .rec-item:last-child{border-bottom:none;}
+  .rec-label{color:var(--slate);min-width:130px;flex-shrink:0;font-size:12.5px;text-transform:uppercase;
+    letter-spacing:0.03em;padding-top:2px;}
   .feedback-row{display:flex;gap:8px;margin-top:14px;}
-  .fb-btn{border:1px solid var(--border);background:#fff;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;}
-  .fb-btn.confirm:hover{border-color:#1a7f4a;color:#1a7f4a;}
-  .fb-btn.reject:hover{border-color:var(--danger);color:var(--danger);}
+  .fb-btn{border:1px solid var(--border);background:var(--paper-2);padding:7px 13px;border-radius:8px;
+    font-size:12.5px;cursor:pointer;font-weight:500;}
+  .fb-btn.confirm:hover{border-color:var(--focus);color:var(--focus);}
+  .fb-btn.reject:hover{border-color:var(--signal);color:var(--signal);}
 
-  .telemetry{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;gap:20px;flex-wrap:wrap;}
-  .placeholder{color:var(--muted);font-size:13.5px;font-style:italic;padding:20px 0;}
-  .rbac-note{font-size:12px;color:var(--muted);background:var(--teal-light);border-radius:8px;padding:8px 12px;margin-bottom:16px;}
+  .telemetry{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--slate);
+    background:var(--paper-2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;
+    display:flex;gap:20px;flex-wrap:wrap;}
+  .placeholder{color:var(--slate);font-size:13.5px;font-style:italic;padding:20px 0;}
+
+  /* ---------- History table ---------- */
+  .history-table{width:100%;border-collapse:collapse;}
+  .history-table th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;
+    color:var(--slate-2);padding:10px 12px;border-bottom:2px solid var(--border);}
+  .history-table td{padding:12px;border-bottom:1px solid var(--border);font-size:13.5px;}
+  .history-table tr:hover{background:var(--focus-dim);cursor:pointer;}
+  .status-pill{font-family:'IBM Plex Mono',monospace;font-size:10.5px;padding:3px 9px;border-radius:20px;
+    text-transform:uppercase;}
+  .status-pill.allowed{background:var(--focus-dim);color:var(--focus);}
+  .status-pill.denied{background:var(--signal-dim);color:var(--signal);}
+
+  .view{display:none;}
+  .view.active{display:block;}
 </style>
 </head>
 <body>
 <div class="app">
   <div class="sidebar">
     <div class="brand">
-      <div class="brand-dot">L</div>
-      <div><div class="brand-name">Lens</div><div class="brand-sub">KPI storytelling</div></div>
+      <div class="brand-mark"></div>
+      <div><div class="brand-name">Lens</div><div class="brand-sub">KPI intelligence engine</div></div>
     </div>
-    <div class="nav-item active">Dashboard</div>
-    <div class="nav-item">Lens Insights</div>
-    <div class="nav-item">History</div>
+    <div class="nav-item active" data-view="dashboard" onclick="switchView('dashboard')">Dashboard</div>
+    <div class="nav-item" data-view="insights" onclick="switchView('insights')">Lens Insights</div>
+    <div class="nav-item" data-view="history" onclick="switchView('history')">History</div>
+    <div class="nav-spacer"></div>
+    <div class="sidebar-foot">Real prototype — running against the live FastAPI backend and real 2014–2017 Superstore data, not scripted.</div>
   </div>
 
   <div class="main">
-    <h1>Revenue Operations Dashboard</h1>
-    <div class="subtitle">Live prototype — running against the real FastAPI backend, not scripted</div>
 
-    <div class="persona-row" id="personaRow"></div>
-    <div class="rbac-note" id="rbacNote"></div>
-
-    <div class="grid" id="kpiGrid">
-      <div class="placeholder">Loading dashboard…</div>
+    <!-- DASHBOARD VIEW -->
+    <div class="view active" id="view-dashboard">
+      <h1>Revenue Operations Dashboard</h1>
+      <div class="subtitle">The clearest signal, focused first — everything else, in view below it.</div>
+      <div class="persona-row" id="personaRow"></div>
+      <div class="rbac-note" id="rbacNote"></div>
+      <div id="featuredBox"></div>
+      <div class="grid" id="kpiGrid"><div class="placeholder">Loading dashboard…</div></div>
     </div>
 
-    <div id="results"></div>
-    <div id="telemetryBox"></div>
+    <!-- LENS INSIGHTS VIEW -->
+    <div class="view" id="view-insights">
+      <h1>Lens Insights</h1>
+      <div class="subtitle">One movement, fully explained — ranked drivers, labeled by how direct the evidence is.</div>
+      <div id="insightsResults"><div class="placeholder">Pick an anomaly from the Dashboard to investigate it here.</div></div>
+      <div id="telemetryBox"></div>
+    </div>
+
+    <!-- HISTORY VIEW -->
+    <div class="view" id="view-history">
+      <h1>History</h1>
+      <div class="subtitle">Every query this persona has made — allowed or denied. Append-only, never edited.</div>
+      <div id="historyBox"><div class="placeholder">Loading history…</div></div>
+    </div>
+
   </div>
 </div>
 
@@ -104,6 +196,14 @@ const PERSONAS = [
 let currentPersona = "finance_vp";
 let currentAnomalies = [];
 
+function switchView(view){
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+  document.getElementById("view-" + view).classList.add("active");
+  document.querySelector(`.nav-item[data-view="${view}"]`).classList.add("active");
+  if(view === "history") loadHistory();
+}
+
 function renderPersonaRow(){
   const row = document.getElementById("personaRow");
   row.innerHTML = "";
@@ -111,7 +211,11 @@ function renderPersonaRow(){
     const btn = document.createElement("button");
     btn.className = "persona-btn" + (p.id === currentPersona ? " active" : "");
     btn.textContent = p.label;
-    btn.onclick = () => { currentPersona = p.id; renderPersonaRow(); loadDashboard(); document.getElementById("results").innerHTML = ""; document.getElementById("telemetryBox").innerHTML = ""; };
+    btn.onclick = () => {
+      currentPersona = p.id; renderPersonaRow(); loadDashboard();
+      document.getElementById("insightsResults").innerHTML = `<div class="placeholder">Pick an anomaly from the Dashboard to investigate it here.</div>`;
+      document.getElementById("telemetryBox").innerHTML = "";
+    };
     row.appendChild(btn);
   });
   const note = document.getElementById("rbacNote");
@@ -125,33 +229,51 @@ function renderPersonaRow(){
 
 async function loadDashboard(){
   const grid = document.getElementById("kpiGrid");
+  const featuredBox = document.getElementById("featuredBox");
   grid.innerHTML = `<div class="placeholder">Loading dashboard…</div>`;
+  featuredBox.innerHTML = "";
   try{
     const res = await fetch("/api/dashboard", {headers: {"X-Persona-Id": currentPersona}});
     const data = await res.json();
     currentAnomalies = data.kpis;
-    grid.innerHTML = "";
+
     if(data.kpis.length === 0){
       grid.innerHTML = `<div class="placeholder">No flagged anomalies visible for this persona's allowed regions.</div>`;
       return;
     }
-    data.kpis.forEach((k, i) => {
+
+    const featured = data.kpis[0];
+    const rest = data.kpis.slice(1);
+    const isUpF = featured.delta_pct >= 0;
+    featuredBox.innerHTML = `
+      <div class="featured lens-focus-in">
+        <div class="featured-eyebrow">Featured signal — ${featured.region}/${featured.segment}</div>
+        <div class="featured-headline">${featured.kpi.replace(/_/g," ")} moved ${Math.abs(featured.delta_pct)}%</div>
+        <div class="featured-body">
+          <div>
+            <div class="featured-value ${isUpF?'up':''}">${isUpF?'+':''}${featured.delta_pct}%</div>
+            <div class="featured-meta">week of ${featured.week} · value ${featured.value}</div>
+          </div>
+          <button class="ask-btn" onclick="investigate(0)">Ask Lens why →</button>
+        </div>
+      </div>`;
+
+    grid.innerHTML = "";
+    rest.forEach((k, i) => {
       const isUp = k.delta_pct >= 0;
       const card = document.createElement("div");
       card.className = "card anomaly";
       card.innerHTML = `
-        <div class="badge">Anomaly</div>
         <div class="kpi-label">${k.kpi.replace(/_/g," ")} — ${k.region}/${k.segment}</div>
         <div class="kpi-value">${typeof k.value === "number" && Math.abs(k.value) > 1000 ? "$"+(k.value/1000).toFixed(1)+"K" : "$"+k.value}</div>
         <div class="kpi-delta ${isUp?'up':'down'}">${isUp?'↗':'↘'} ${Math.abs(k.delta_pct)}%</div>
-        <div class="freshness">week of ${k.week}</div>
-        <button class="ask-btn" onclick="investigate(${i})">Ask Lens why →</button>
+        <div class="freshness" style="grid-column:auto">week of ${k.week}</div>
+        <button class="ask-btn" onclick="investigate(${i+1})">Ask Lens why →</button>
       `;
       grid.appendChild(card);
     });
     const freshness = document.createElement("div");
     freshness.className = "freshness";
-    freshness.style.gridColumn = "1 / -1";
     freshness.textContent = data.freshness_note + ` (as of ${data.as_of})`;
     grid.appendChild(freshness);
   } catch(err){
@@ -161,9 +283,10 @@ async function loadDashboard(){
 
 async function investigate(index){
   const anomaly = currentAnomalies[index];
-  const results = document.getElementById("results");
+  switchView("insights");
+  const results = document.getElementById("insightsResults");
   const telemetryBox = document.getElementById("telemetryBox");
-  results.innerHTML = `<div class="stage-card"><div class="placeholder">Running Explain → Recommend → Personas… (this makes real LLM calls and can take a few seconds)</div></div>`;
+  results.innerHTML = `<div class="stage-card"><div class="placeholder">Running Explain → Recommend → Personas… (real LLM calls, can take several seconds)</div></div>`;
   telemetryBox.innerHTML = "";
 
   try{
@@ -174,7 +297,7 @@ async function investigate(index){
     });
 
     if(res.status === 500){
-      results.innerHTML = `<div class="stage-card"><div class="gap-box"><strong>Temporary error (likely a Groq rate limit).</strong><br/>The pipeline hit a rate limit or transient API error. Wait a few seconds and click "Ask Lens why" again — this does NOT mean the app is broken.</div></div>`;
+      results.innerHTML = `<div class="stage-card"><div class="gap-box"><strong>Temporary error (likely a Groq rate limit).</strong><br/>Wait a few seconds and click "Ask Lens why" again — this does not mean the app is broken.</div></div>`;
       return;
     }
     if(!res.ok){
@@ -184,37 +307,55 @@ async function investigate(index){
       return;
     }
     const data = await res.json();
-    renderResults(data);
+    renderInsights(data);
   } catch(err){
-    results.innerHTML = `<div class="stage-card"><div class="gap-box"><strong>Could not reach the API.</strong><br/>Check the backend terminal is still running. (${err.message})</div></div>`;
+    results.innerHTML = `<div class="stage-card"><div class="gap-box"><strong>Could not reach the API.</strong><br/>${err.message}</div></div>`;
   }
 }
 
-function renderResults(data){
-  const results = document.getElementById("results");
+function renderInsights(data){
+  const results = document.getElementById("insightsResults");
   const telemetryBox = document.getElementById("telemetryBox");
   const isAbstention = data.confidence === "low_confidence_abstain" || data.confidence === "insufficient_history";
 
   let html = `
-    <div class="stage-card">
-      <div class="stage-title">Explain — ${data.persona_view} view</div>
-      <div class="stage-sub">${data.kpi} · ${data.region}/${data.segment} · week of ${data.week} ${data.cache_hit ? "· <em>cached result</em>" : ""}</div>
-      <div class="cause-box ${isAbstention ? '' : 'high'}">
-        <span class="conf-pill">${data.confidence}</span>
-        <div>${data.narrative}</div>
+    <div class="stage-card lens-focus-in">
+      <div class="stage-title">${data.persona_view} view — ${data.kpi} · ${data.region}/${data.segment} · week of ${data.week}</div>
+      <div class="stage-sub">${data.cache_hit ? "Served from cache — no new cost incurred" : "Freshly computed"}</div>
+      <div class="cause-box ${isAbstention ? 'abstain' : ''}">
+        <span class="conf-pill ${data.confidence}">${data.confidence.replace(/_/g," ")}</span>
+        <div style="margin-top:8px">${data.narrative}</div>
       </div>
     </div>`;
+
+  if(data.ranked_drivers && data.ranked_drivers.length){
+    html += `<div class="stage-card">
+      <div class="stage-title">Ranked drivers</div>
+      <div class="stage-sub">What the evidence actually supports, labeled by directness</div>`;
+    data.ranked_drivers.forEach(d => {
+      html += `
+        <div class="driver-row">
+          <div>
+            <span class="driver-name">${d.name}</span>
+            <span class="driver-type ${d.type}">${d.type}</span>
+            <div class="driver-note">${d.note}</div>
+          </div>
+          <div class="driver-value">${d.value}</div>
+        </div>`;
+    });
+    html += `</div>`;
+  }
 
   if(!isAbstention){
     html += `
       <div class="stage-card">
         <div class="stage-title">Recommend</div>
-        <div class="rec-item"><span>Driver</span><span>${data.driver}</span></div>
-        <div class="rec-item"><span>Lever</span><span>${data.lever}</span></div>
-        <div class="rec-item"><span>Owner</span><span>${data.owner}</span></div>
-        <div class="rec-item"><span>Action</span><span>${data.action}</span></div>
-        <div class="rec-item"><span>Expected impact</span><span>${data.expected_impact}</span></div>
-        <div class="rec-item"><span>Monitoring plan</span><span>${data.monitoring_plan}</span></div>
+        <div class="rec-item"><span class="rec-label">Driver</span><span>${data.driver}</span></div>
+        <div class="rec-item"><span class="rec-label">Lever</span><span>${data.lever}</span></div>
+        <div class="rec-item"><span class="rec-label">Owner</span><span>${data.owner}</span></div>
+        <div class="rec-item"><span class="rec-label">Action</span><span>${data.action}</span></div>
+        <div class="rec-item"><span class="rec-label">Expected impact</span><span>${data.expected_impact}</span></div>
+        <div class="rec-item"><span class="rec-label">Monitoring</span><span>${data.monitoring_plan}</span></div>
         <div class="feedback-row">
           <button class="fb-btn confirm" onclick="sendFeedback('${data.kpi}','${data.region}','${data.segment}','${data.week}','confirmed')">Confirm cause</button>
           <button class="fb-btn reject" onclick="sendFeedback('${data.kpi}','${data.region}','${data.segment}','${data.week}','rejected')">Reject cause</button>
@@ -233,8 +374,38 @@ function renderResults(data){
       <span>llm calls: ${t.model_calls}</span>
       <span>tokens: ${t.total_tokens}</span>
       <span>est. cost: $${t.total_estimated_cost_usd}</span>
-      ${data.cache_hit ? '<span><strong>served from cache — no new cost incurred</strong></span>' : ''}
+      ${data.cache_hit ? '<span><strong>served from cache</strong></span>' : ''}
     </div>`;
+}
+
+async function loadHistory(){
+  const box = document.getElementById("historyBox");
+  box.innerHTML = `<div class="placeholder">Loading history…</div>`;
+  try{
+    const res = await fetch("/api/history", {headers: {"X-Persona-Id": currentPersona}});
+    const data = await res.json();
+    if(!data.entries.length){
+      box.innerHTML = `<div class="placeholder">No queries yet for this persona. Investigate an anomaly from the Dashboard first.</div>`;
+      return;
+    }
+    let html = `<table class="history-table"><thead><tr>
+      <th>Time</th><th>KPI</th><th>Region/Segment</th><th>Week</th><th>Status</th><th>Confidence</th>
+    </tr></thead><tbody>`;
+    data.entries.forEach(e => {
+      html += `<tr>
+        <td>${new Date(e.timestamp).toLocaleString()}</td>
+        <td>${e.kpi}</td>
+        <td>${e.region}/${e.segment}</td>
+        <td>${e.week}</td>
+        <td><span class="status-pill ${e.status}">${e.status}</span></td>
+        <td>${e.confidence || "—"}</td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+    box.innerHTML = html;
+  } catch(err){
+    box.innerHTML = `<div class="placeholder">Could not reach the API.</div>`;
+  }
 }
 
 async function sendFeedback(kpi, region, segment, week, verdict){

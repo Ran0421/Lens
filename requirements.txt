@@ -11,3 +11,5 @@ jupyter
 tabulate
 groq
 python-dotenv
+fastapi
+uvicorn

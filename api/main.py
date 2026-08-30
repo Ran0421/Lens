@@ -151,6 +151,98 @@ def dashboard(x_persona_id: str = Header(default="finance_vp")):
     }
 
 
+def build_ranked_drivers(evidence_packet: dict) -> list:
+    """Builds a non-PII, safe-to-expose list of ranked drivers for the
+    Lens Insights view. Derived ONLY from decomposition (volume/mix/price
+    effects, category breakdown) and evidence_scoring numbers -- NEVER
+    from customer_context or supporting_tickets, so this is safe to return
+    to any persona regardless of masking rules; it contains no identifiers.
+
+    Each driver is labeled with how DIRECT its evidence is:
+      - "direct" -- a deterministic arithmetic quantity (decompose.py's
+        volume/mix/price effects, or a category's raw delta)
+      - "correlational" -- ticket coverage as a proxy signal, not a
+        causal input
+      - "context" -- static customer-context aggregates (tenure/churn),
+        descriptive background, not evidence for THIS week's movement
+    """
+    dec = evidence_packet.get("decomposition", {})
+    ev = evidence_packet.get("evidence_scoring", {})
+    drivers = []
+
+    for effect_name, label in [("volume_effect", "Volume effect"),
+                                 ("mix_effect", "Mix effect"),
+                                 ("price_effect", "Price effect")]:
+        val = dec.get(effect_name)
+        if val is not None:
+            drivers.append({
+                "name": label, "value": round(val, 2), "type": "direct",
+                "note": "Deterministic arithmetic decomposition of the observed KPI change.",
+            })
+
+    for cat in dec.get("category_breakdown", [])[:3]:
+        drivers.append({
+            "name": f"{cat['category']} category delta", "value": cat["delta"], "type": "direct",
+            "note": f"Category-level contribution vs. its own baseline (avg {cat['baseline_value']}).",
+        })
+
+    if ev:
+        drivers.append({
+            "name": "Support ticket coverage",
+            "value": f"{ev.get('ticket_coverage_score', 0)*100:.0f}% coverage score",
+            "type": "correlational",
+            "note": "Ticket volume is a proxy signal for customer-side context, not a causal input.",
+        })
+        drivers.append({
+            "name": "Baseline reliability",
+            "value": f"{ev.get('baseline_reliability_score', 0)*100:.0f}%",
+            "type": "context",
+            "note": "How many trailing weeks of history this baseline is built from.",
+        })
+
+    drivers.sort(key=lambda d: (0 if d["type"] == "direct" else 1 if d["type"] == "correlational" else 2))
+    return drivers
+
+
+# ---------------------------------------------------------------------------
+# /api/history -- real audit log, filtered to this persona's own queries
+# ---------------------------------------------------------------------------
+
+AUDIT_LOG_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "processed", "audit_log.jsonl")
+
+
+@app.get("/api/history")
+def history(x_persona_id: str = Header(default="finance_vp")):
+    persona_id = x_persona_id
+    if persona_id not in governance.ROLE_ACCESS:
+        raise HTTPException(status_code=401, detail=f"Unknown persona id '{persona_id}'")
+
+    if not os.path.exists(AUDIT_LOG_PATH):
+        return {"entries": []}
+
+    cache = _load_cache()
+    entries = []
+    with open(AUDIT_LOG_PATH) as f:
+        for line in f:
+            entry = json.loads(line)
+            # A persona only ever sees their OWN query history -- this is
+            # always safe by construction, since it's a record of things
+            # they themselves already had access to.
+            if entry.get("persona_id") != persona_id:
+                continue
+            key = _cache_key(persona_id, entry["kpi"], entry["region"], entry["segment"], entry["week"])
+            cached_result = cache.get(key)
+            entries.append({
+                "timestamp": entry["timestamp"], "kpi": entry["kpi"], "region": entry["region"],
+                "segment": entry["segment"], "week": entry["week"], "status": entry["status"],
+                "reason": entry["reason"],
+                "confidence": cached_result.get("confidence") if cached_result else None,
+            })
+
+    entries.sort(key=lambda e: e["timestamp"], reverse=True)
+    return {"entries": entries}
+
+
 # ---------------------------------------------------------------------------
 # /api/investigate -- the real Explain -> Recommend -> Personas chain, gated
 # by governance, cached persistently.
@@ -248,6 +340,7 @@ def investigate(req: InvestigateRequest, x_persona_id: str = Header(default="fin
         "monitoring_plan": recommend_record["monitoring_plan"],
         "narrative": narrative,
         "persona_view": PERSONAS[persona_key]["display_name"],
+        "ranked_drivers": build_ranked_drivers(explain_record["evidence_packet"]) if scenario_type == "flagged_anomaly" else [],
         "telemetry": total_telemetry,
         "cache_hit": False,
     }
