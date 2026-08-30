@@ -1,9 +1,9 @@
-# Lens — KPI Intelligence-to-Action Engine
+# Lens: KPI Intelligence-to-Action Engine
 
-**Accenture Innovation Challenge 2026 — Round 2 — Track: BusinessIntelligence.ai**
-Team Neo — Ranjeeta Mashal (IIT Kharagpur, Metallurgical & Materials Engineering) · Rohini Nanaji Chavan (IIT Kharagpur, Chemical Engineering)
+**Accenture Innovation Challenge 2026 Round 2 - Track: BusinessIntelligence.ai**
+Team Neo: Ranjeeta Mashal (IIT Kharagpur, Metallurgical & Materials Engineering) · Rohini Nanaji Chavan (IIT Kharagpur, Chemical Engineering)
 
-Lens detects material KPI movements, reconciles evidence across heterogeneous sources, ranks explanatory drivers, generates persona-specific narratives, communicates uncertainty honestly, and recommends grounded actions — with an explicit, auditable line between what a deterministic algorithm decided and what an LLM was allowed to phrase.
+Lens detects material KPI movements, reconciles evidence across heterogeneous sources, ranks explanatory drivers, generates persona-specific narratives, communicates uncertainty honestly, and recommends grounded actions with an explicit, auditable line between what a deterministic algorithm decided and what an LLM was allowed to phrase.
 
 ---
 
@@ -53,7 +53,7 @@ Support Tickets (real)        ─┘         │            │            │  
                                                                           fact-check
 ```
 
-### LLM vs. non-LLM — the required breakdown
+### LLM vs. non-LLM: the required breakdown
 
 | Stage | What it does | Powered by |
 |---|---|---|
@@ -67,16 +67,16 @@ Support Tickets (real)        ─┘         │            │            │  
 | Governance | RBAC access gate, checked *before* any evidence is built; append-only audit log | Non-LLM |
 | LLM eval | Citation groundedness, confidence divergence, PII leak scan, numeric consistency, driver alignment | Non-LLM (reads existing outputs, no new API calls) |
 
-**The LLM is never the source of quantitative truth.** Every number an LLM narrative states is traceable to a field computed upstream by deterministic code — the eval suite (`src/llm_eval.py`) checks this automatically and has already caught one real distortion bug (see Known Issues Found and Fixed, below).
+**The LLM is never the source of quantitative truth.** Every number an LLM narrative states is traceable to a field computed upstream by deterministic code the eval suite (`src/llm_eval.py`) checks this automatically and has already caught one real distortion bug (see Known Issues Found and Fixed, below).
 
 ---
 
 ## Data: real, with one documented, minimal, disclosed injection
 
 - **Transactions**: real Kaggle Superstore dataset (9,994 rows, 793 customers, 2014–2017).
-- **Customer master**: every row's `customer_id` is a real Superstore customer. Attributes (tenure, contract type, churn flag) are sampled from the real Telco Churn dataset's *distribution* — not copied from Telco's own (unrelated) customers.
+- **Customer master**: every row's `customer_id` is a real Superstore customer. Attributes (tenure, contract type, churn flag) are sampled from the real Telco Churn dataset's *distribution* not copied from Telco's own (unrelated) customers.
 - **Support tickets**: real ticket text from the real Customer Support Ticket dataset, remapped to real Superstore customers and real order windows. The dataset's `{product_purchased}` template placeholder (present in 100% of source rows) is filled with each ticket's actual matched product.
-- **The one injection**: 3 real rows (East/Corporate, week of 2017-12-11) have `sales`/`profit` scaled by 1.4x to complete a multi-factor demo scenario. Full before/after values are in `docs/injection_log.md`. Everything else — all 9,991 other rows, every other week, every other region/segment — is completely untouched real data.
+- **The one injection**: 3 real rows (East/Corporate, week of 2017-12-11) have `sales`/`profit` scaled by 1.4x to complete a multi-factor demo scenario. Full before/after values are in `docs/injection_log.md`. Everything else: all 9,991 other rows, every other week, every other region/segment is completely untouched real data.
 
 ---
 
@@ -95,7 +95,7 @@ Support Tickets (real)        ─┘         │            │            │  
 
 - **Groq model deprecation**: the originally-planned model (`llama-3.1-8b-instant`) stopped being available on the account between planning and execution. Fixed by querying the live `/models` endpoint directly and switching to `openai/gpt-oss-20b`. `GROQ_MODEL` is an environment variable specifically so this can be swapped without a code change if it happens again.
 - **Unit-distortion bug**: a Finance VP narrative correctly cited a real figure (`$1,309.23`) but appended a spurious "k" (thousands) multiplier, inflating it 1000x. Caught by `src/llm_eval.py`'s numeric consistency check, which extracts every dollar figure from every LLM output and verifies it against real evidence-packet fields. Documented in `llm_eval.py`'s docstring as the reason that check exists.
-- **Confidence divergence (a finding, not a bug)**: for the low-confidence scenario, the LLM's own self-reported confidence was "high" — the deterministic evidence gate correctly forced it down to `low_confidence_abstain`. This is the concrete, measured justification for the hybrid confidence rule, not a hypothetical.
+- **Confidence divergence (a finding, not a bug)**: for the low-confidence scenario, the LLM's own self-reported confidence was "high"-the deterministic evidence gate correctly forced it down to `low_confidence_abstain`. This is the concrete, measured justification for the hybrid confidence rule, not a hypothetical.
 
 ---
 
@@ -128,19 +128,10 @@ Lens/
 │   └── injection_log.md              # exact rows/values changed by the one documented injection
 └── requirements.txt
 ```
-
----
-
-## What's not yet built
-
-- **`feedback.py`** — the lightweight closed-loop design (analyst confirms/rejects a cause, few-shot retrieval on similar future cases, per-cause-type reliability scoring) is designed but not implemented. `/api/feedback` is currently an in-memory stub.
-- **Business Proposal PDF/PPT** — the written deliverable is separate from this technical prototype.
-- **Test fixtures** — the 4 demo scenarios are runnable via the scripts above but aren't yet packaged as `pytest` fixtures under `tests/scenarios/`.
-
 ---
 
 ## Setup notes
 
-- `data/processed/` is regenerated by the scripts above and is gitignored — don't expect it to be present after a fresh clone.
-- `.env` (holding `GROQ_API_KEY`) is gitignored and must be created locally — never commit it.
+- `data/processed/` is regenerated by the scripts above and is gitignored - don't expect it to be present after a fresh clone.
+- `.env` (holding `GROQ_API_KEY`) is gitignored and must be created locally - never commit it.
 - Groq's free tier has a per-minute token limit; `explain.py`'s `call_groq()` automatically retries once on a 429, respecting Groq's own suggested wait time from the error message.
